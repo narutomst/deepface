@@ -21,6 +21,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 IDENTIFIED_IMG_SIZE = 112
 TEXT_COLOR = (255, 255, 255)
 
+
 # pylint: disable=unused-variable
 def analysis(
     db_path: str,
@@ -68,6 +69,7 @@ def analysis(
     build_demography_models(enable_face_analysis=enable_face_analysis)
     build_facial_recognition_model(model_name=model_name)
     # call a dummy find function for db_path once to create embeddings before starting webcam
+    # 为 db_path 调用一次虚拟查找函数，以便在启动网络摄像头之前创建嵌入内容
     _ = search_identity(
         detected_face=np.zeros([224, 224, 3]),
         db_path=db_path,
@@ -89,6 +91,7 @@ def analysis(
 
         # we are adding some figures into img such as identified facial image, age, gender
         # that is why, we need raw image itself to make analysis
+        # 我们要在图像中添加一些数据，例如已识别的面部图像、年龄、性别，这就是为什么我们需要原始图像本身来进行分析。
         raw_img = img.copy()
 
         faces_coordinates = []
@@ -99,6 +102,7 @@ def analysis(
 
             # we will pass img to analyze modules (identity, demography) and add some illustrations
             # that is why, we will not be able to extract detected face from img clearly
+            # 我们将把 img 传递给分析模块（身份、人口），并添加一些插图。这就是为什么我们无法从 img 中清晰提取检测到的人脸的原因。
             detected_faces = extract_facial_areas(img=img, faces_coordinates=faces_coordinates)
 
             img = highlight_facial_areas(img=img, faces_coordinates=faces_coordinates)
@@ -259,7 +263,7 @@ def search_identity(
 
 def build_demography_models(enable_face_analysis: bool) -> None:
     """
-    Build demography analysis models
+    Build demography analysis models 建立人口分析模型
     Args:
         enable_face_analysis (bool): Flag to enable face analysis (default is True).
     Returns:
@@ -281,11 +285,12 @@ def highlight_facial_areas(
     anti_spoofing: bool = False,
 ) -> np.ndarray:
     """
-    Highlight detected faces with rectangles in the given image
+    Highlight detected faces with rectangles in the given image 在给定图像中用矩形突出显示检测到的人脸
     Args:
         img (np.ndarray): image itself
         faces_coordinates (list): list of face coordinates as tuple with x, y, w and h
             also is_real and antispoof_score keys
+        包含 x、y、w 和 h 的元组的人脸坐标列表以及 is_real 和 antispoof_score 键
         anti_spoofing (boolean): Flag to enable anti spoofing (default is False).
     Returns:
         img (np.ndarray): image with highlighted facial areas
@@ -315,8 +320,8 @@ def countdown_to_freeze(
     Args:
         img (np.ndarray): image itself
         faces_coordinates (list): list of face coordinates as tuple with x, y, w and h
-        frame_threshold (int): how many sequantial frames required with face(s) to freeze
-        num_frames_with_faces (int): how many sequantial frames do we have with face(s)
+        frame_threshold (int): how many sequantial frames required with face(s) to freeze 需要多少帧连续画面来冻结人脸?
+        num_frames_with_faces (int): how many sequantial frames do we have with face(s)   我们有多少个带有人脸的序列帧?
     Returns:
         img (np.ndarray): image with counter values
     """
@@ -337,11 +342,11 @@ def countdown_to_release(
     img: Optional[np.ndarray], tic: float, time_threshold: int
 ) -> Optional[np.ndarray]:
     """
-    Highlight time to release the freezing in the image top left area
+    Highlight time to release the freezing in the image top left area 在图像左上方区域突出显示释放冻结的时间
     Args:
         img (np.ndarray): image itself
-        tic (float): time specifying when freezing started
-        time_threshold (int): freeze time threshold
+        tic (float): time specifying when freezing started  冻结开始时间
+        time_threshold (int): freeze time threshold 冻结时间阈值
     Returns:
         img (np.ndarray): image with time to release the freezing
     """
@@ -373,7 +378,8 @@ def grab_facial_areas(
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8', 'centerface' or 'skip'
             (default is opencv).
-        threshold (int): threshold for facial area, discard smaller ones
+        anti_spoofing (boolean): Flag to enable anti spoofing (default is False).
+        threshold (int): threshold for facial area, discard smaller ones   面部区域的阈值，舍弃较小的阈值
     Returns
         result (list): list of tuple with x, y, w and h coordinates
     """
@@ -439,6 +445,7 @@ def perform_facial_recognition(
             x, y, w and h values also is_real and antispoof_score keys
         db_path (string): Path to the folder containing image files. All detected faces
             in the database will be considered in the decision-making process.
+        包含图像文件的文件夹路径。决策过程将考虑数据库中所有检测到的面孔。
         detector_backend (string): face detector backend. Options: 'opencv', 'retinaface',
             'mtcnn', 'ssd', 'dlib', 'mediapipe', 'yolov8', 'centerface' or 'skip'
             (default is opencv).
