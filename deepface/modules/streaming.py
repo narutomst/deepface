@@ -173,7 +173,7 @@ def build_facial_recognition_model(model_name: str) -> None:
         model_name (str): Model for face recognition. Options: VGG-Face, Facenet, Facenet512,
             OpenFace, DeepFace, DeepID, Dlib, ArcFace, SFace and GhostFaceNet (default is VGG-Face).
     Returns
-        input_shape (tuple): input shape of given facial recognitio n model.
+        input_shape (tuple): input shape of given facial recognition model.
     """
     _ = DeepFace.build_model(model_name=model_name)
     logger.info(f"{model_name} is built")
