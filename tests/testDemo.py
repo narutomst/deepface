@@ -3,6 +3,8 @@ import cv2
 from deepface import DeepFace
 from tests import test_analyze
 from tests import test_enforce_detection
+from deepface.modules import modeling
+from deepface.modules.modeling import *
 from deepface.modules import streaming
 from deepface.modules.streaming import *
 from deepface.commons import logger as log
@@ -24,30 +26,35 @@ logger = log.get_singletonish_logger()
 # 这样就能降低运算量。
 
 # deepface.modules.streaming.analysis()
+db_path = "dataset"
 model_name = "VGG-Face"
 detector_backend = "opencv"
 distance_metric = "cosine"
 enable_face_analysis = True
+enable_face_recognition = True
 source = 0
 time_threshold = 2
 frame_threshold = 2
 anti_spoofing = False
 
 # build_demography_models(enable_face_analysis=enable_face_analysis)
-DeepFace.build_model(model_name="Emotion")
+# DeepFace.build_model(model_name="Emotion")
+modeling.build_model(model_name="Emotion")
 logger.info("Emotion model is just built")
 
 # build_facial_recognition_model(model_name=model_name)
-_ = DeepFace.build_model(model_name=model_name)
-logger.info(f"{model_name} is built")
+if enable_face_recognition:
+    _ = DeepFace.build_model(model_name=model_name)
+    logger.info(f"{model_name} is built")
 
-# _ = search_identity(
-#     detected_face=np.zeros([224, 224, 3]),
-#     db_path=db_path,
-#     detector_backend=detector_backend,
-#     distance_metric=distance_metric,
-#     model_name=model_name,
-# )
+if enable_face_recognition:
+    _ = search_identity(
+        detected_face=np.zeros([224, 224, 3]),
+        db_path=db_path,
+        detector_backend=detector_backend,
+        distance_metric=distance_metric,
+        model_name=model_name,
+    )
 
 freezed_img = None
 freeze = False
@@ -100,16 +107,17 @@ while True:
                 faces_coordinates=faces_coordinates,
                 detected_faces=detected_faces,
             )
-            # facial recogntion analysis
-            img = perform_facial_recognition(
-                img=img,
-                faces_coordinates=faces_coordinates,
-                detected_faces=detected_faces,
-                db_path=db_path,
-                detector_backend=detector_backend,
-                distance_metric=distance_metric,
-                model_name=model_name,
-            )
+            # facial recognition analysis
+            if enable_face_recognition:
+                img = perform_facial_recognition(
+                    img=img,
+                    faces_coordinates=faces_coordinates,
+                    detected_faces=detected_faces,
+                    db_path=db_path,
+                    detector_backend=detector_backend,
+                    distance_metric=distance_metric,
+                    model_name=model_name,
+                )
 
             # freeze the img after analysis
             freezed_img = img.copy()
