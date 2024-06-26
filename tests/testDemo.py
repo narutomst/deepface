@@ -30,7 +30,13 @@ db_path = "dataset"
 model_name = "VGG-Face"
 detector_backend = "opencv"
 distance_metric = "cosine"
+
 enable_face_analysis = True
+enable_face_analysis_Emotion = True
+enable_face_analysis_Age = True
+enable_face_analysis_Gender = True
+enable_face_analysis_Race = True
+
 enable_face_recognition = True
 source = 0
 time_threshold = 2
