@@ -4,6 +4,7 @@ from deepface import DeepFace
 from tests import test_analyze
 from tests import test_enforce_detection
 from deepface.modules import modeling
+from deepface.modules import detection
 from deepface.modules.modeling import *
 from deepface.modules import streaming
 from deepface.modules.streaming import *
@@ -33,21 +34,35 @@ distance_metric = "cosine"
 
 enable_face_analysis = True
 enable_face_analysis_Emotion = True
-enable_face_analysis_Age = True
-enable_face_analysis_Gender = True
-enable_face_analysis_Race = True
+enable_face_analysis_Age = False
+enable_face_analysis_Gender = False
+enable_face_analysis_Race = False
 
-enable_face_recognition = True
+enable_face_recognition = False
 source = 0
 time_threshold = 2
-frame_threshold = 2
+frame_threshold = 3
 anti_spoofing = False
 
+threshold = 130  # 面部区域的阈值，舍弃较小的阈值
+enforce_detection = False
+
+actions = []
+if enable_face_analysis_Emotion:
+    actions.append("emotion")
+if enable_face_analysis_Age:
+    actions.append("age")
+if enable_face_analysis_Gender:
+    actions.append("gender")
+if enable_face_analysis_Race:
+    actions.append("race")
+
+# build_demography_models(enable_face_analysis=enable_face_analysis)
 if enable_face_analysis:
     if enable_face_analysis_Emotion:
         # build_demography_models(enable_face_analysis=enable_face_analysis)
         # DeepFace.build_model(model_name="Emotion")
-        modeling.build_model(model_name="Emotion")
+        # modeling.build_model(model_name="Emotion")
         logger.info("Emotion model is just built")
 
     if enable_face_analysis_Age:
@@ -95,15 +110,38 @@ while True:
 
     # we are adding some figures into img such as identified facial image, age, gender
     # that is why, we need raw image itself to make analysis
-    # 我们要在图像中添加一些数据，例如已识别的面部图像、年龄、性别，这就是为什么我们需要原始图像本身来进行分析。
-    raw_img = img.copy()
+    # 我们要在图像img中添加一些数据，例如已识别的面部图像、年龄、性别，这就是为什么我们需要原始图像本身来进行分析。
+    raw_img = img.copy()  # 原始图像
 
     faces_coordinates = []
     if freeze is False:
-        faces_coordinates = grab_facial_areas(
-            img=img, detector_backend=detector_backend, anti_spoofing=anti_spoofing
-        )
-
+        # faces_coordinates = grab_facial_areas(
+        #     img=img, detector_backend=detector_backend, anti_spoofing=anti_spoofing
+        # )
+        try:
+            face_objs = DeepFace.extract_faces(
+                img_path=img,
+                detector_backend=detector_backend,
+                # you may consider to extract with larger expanding value
+                expand_percentage=0,
+                anti_spoofing=anti_spoofing,
+            )
+            faces = [
+                (
+                    face_obj["facial_area"]["x"],
+                    face_obj["facial_area"]["y"],
+                    face_obj["facial_area"]["w"],
+                    face_obj["facial_area"]["h"],
+                    face_obj.get("is_real", True),
+                    face_obj.get("antispoof_score", 0),
+                )
+                for face_obj in face_objs
+                if face_obj["facial_area"]["w"] > threshold
+            ]
+            faces_coordinates = faces
+        except:  # to avoid exception if no face detected
+            print("no face detected, continue")
+            continue
         # we will pass img to analyze modules (identity, demography) and add some illustrations
         # that is why, we will not be able to extract detected face from img clearly
         # 我们将把 img 传递给分析模块（身份、人口），并添加一些插图。这就是为什么我们无法从 img 中清晰提取检测到的人脸的原因。
@@ -127,12 +165,43 @@ while True:
             )
 
             # age, gender and emotion analysis
-            img = perform_demography_analysis(
-                enable_face_analysis=enable_face_analysis,
-                img=raw_img,
-                faces_coordinates=faces_coordinates,
-                detected_faces=detected_faces,
-            )
+            # img = perform_demography_analysis(
+            #     enable_face_analysis=enable_face_analysis,
+            #     img=raw_img,
+            #     faces_coordinates=faces_coordinates,
+            #     detected_faces=detected_faces,
+            # )
+            if enable_face_analysis is False:
+                # return img
+                break
+            for idx, (x, y, w, h, is_real, antispoof_score) in enumerate(faces_coordinates):
+                detected_face = detected_faces[idx]
+                demographies = DeepFace.analyze(
+                    img_path=detected_face,
+                    actions=actions,
+                    detector_backend="skip",
+                    enforce_detection=enforce_detection,
+                    silent=True,
+                )
+
+                if len(demographies) == 0:
+                    continue
+
+                # safe to access 1st index because detector backend is skip
+                demography = demographies[0]
+
+                img = overlay_emotion(img=raw_img, emotion_probas=demography["emotion"], x=x, y=y, w=w, h=h)
+                if enable_face_analysis_Age and enable_face_recognition:
+                    img = overlay_age_gender(
+                        img=img,
+                        apparent_age=demography["age"],
+                        gender=demography["dominant_gender"][0:1],  # M or W
+                        x=x,
+                        y=y,
+                        w=w,
+                        h=h,
+                    )
+
             # facial recognition analysis
             if enable_face_recognition:
                 img = perform_facial_recognition(
