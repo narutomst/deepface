@@ -299,12 +299,12 @@ def highlight_facial_areas(
         # highlight facial area with rectangle
 
         if anti_spoofing is False:
-            color = (67, 67, 67)
+            color = (255, 0, 0)    # 蓝色
         else:
             if is_real is True:
-                color = (0, 255, 0)
+                color = (0, 255, 0)  # 绿色
             else:
-                color = (0, 0, 255)
+                color = (0, 0, 255)  # 红色
         cv2.rectangle(img, (x, y), (x + w, y + h), color, 1)
     return img
 
