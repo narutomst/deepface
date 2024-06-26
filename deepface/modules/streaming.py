@@ -187,7 +187,7 @@ def search_identity(
     distance_metric: str,
 ) -> Tuple[Optional[str], Optional[np.ndarray]]:
     """
-    Search an identity in facial database.
+    Search an identity in facial database. 在面部数据库中搜索身份
     Args:
         detected_face (np.ndarray): extracted individual facial image
         db_path (string): Path to the folder containing image files. All detected faces
