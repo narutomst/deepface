@@ -1,7 +1,10 @@
 import time
+import cv2
 from deepface import DeepFace
 from tests import test_analyze
 from tests import test_enforce_detection
+from deepface.modules import streaming
+from deepface.modules.streaming import *
 from deepface.commons import logger as log
 logger = log.get_singletonish_logger()
 
@@ -22,6 +25,14 @@ logger = log.get_singletonish_logger()
 
 # deepface.modules.streaming.analysis()
 model_name = "VGG-Face"
+detector_backend = "opencv"
+distance_metric = "cosine"
+enable_face_analysis = True
+source = 0
+time_threshold = 2
+frame_threshold = 2
+anti_spoofing = False
+
 # build_demography_models(enable_face_analysis=enable_face_analysis)
 DeepFace.build_model(model_name="Emotion")
 logger.info("Emotion model is just built")
@@ -30,13 +41,13 @@ logger.info("Emotion model is just built")
 _ = DeepFace.build_model(model_name=model_name)
 logger.info(f"{model_name} is built")
 
-_ = search_identity(
-    detected_face=np.zeros([224, 224, 3]),
-    db_path=db_path,
-    detector_backend=detector_backend,
-    distance_metric=distance_metric,
-    model_name=model_name,
-)
+# _ = search_identity(
+#     detected_face=np.zeros([224, 224, 3]),
+#     db_path=db_path,
+#     detector_backend=detector_backend,
+#     distance_metric=distance_metric,
+#     model_name=model_name,
+# )
 
 freezed_img = None
 freeze = False
