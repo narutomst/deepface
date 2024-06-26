@@ -43,13 +43,33 @@ time_threshold = 2
 frame_threshold = 2
 anti_spoofing = False
 
-# build_demography_models(enable_face_analysis=enable_face_analysis)
-# DeepFace.build_model(model_name="Emotion")
-modeling.build_model(model_name="Emotion")
-logger.info("Emotion model is just built")
+if enable_face_analysis:
+    if enable_face_analysis_Emotion:
+        # build_demography_models(enable_face_analysis=enable_face_analysis)
+        # DeepFace.build_model(model_name="Emotion")
+        modeling.build_model(model_name="Emotion")
+        logger.info("Emotion model is just built")
 
-# build_facial_recognition_model(model_name=model_name)
+    if enable_face_analysis_Age:
+        # build_demography_models(enable_face_analysis=enable_face_analysis)
+        # DeepFace.build_model(model_name="Age")
+        modeling.build_model(model_name="Age")
+        logger.info("Age model is just built")
+
+    if enable_face_analysis_Gender:
+        # build_demography_models(enable_face_analysis=enable_face_analysis)
+        # DeepFace.build_model(model_name="Gender")
+        modeling.build_model(model_name="Gender")
+        logger.info("Gender model is just built")
+
+    if enable_face_analysis_Race:
+        # build_demography_models(enable_face_analysis=enable_face_analysis)
+        # DeepFace.build_model(model_name="Race")
+        modeling.build_model(model_name="Race")
+        logger.info("Race model is just built")
+
 if enable_face_recognition:
+    # build_facial_recognition_model(model_name=model_name)
     _ = DeepFace.build_model(model_name=model_name)
     logger.info(f"{model_name} is built")
 
