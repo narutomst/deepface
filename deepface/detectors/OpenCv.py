@@ -8,6 +8,7 @@ from deepface.models.Detector import Detector, FacialAreaRegion
 class OpenCvClient(Detector):
     """
     Class to cover common face detection functionalitiy for OpenCv backend
+    涵盖 OpenCv 后端常用人脸检测功能的类
     """
 
     def __init__(self):
@@ -19,7 +20,7 @@ class OpenCvClient(Detector):
         Returns:
             model (dict): including face_detector and eye_detector keys
         """
-        detector = {}
+        detector: dict[str, Any] = {}
         detector["face_detector"] = self.__build_cascade("haarcascade")
         detector["eye_detector"] = self.__build_cascade("haarcascade_eye")
         return detector
@@ -92,7 +93,8 @@ class OpenCvClient(Detector):
         detected_face_gray = cv2.cvtColor(
             img, cv2.COLOR_BGR2GRAY
         )  # eye detector expects gray scale image
-
+        # 这段代码是将图像从BGR颜色空间转换为灰度图像。在OpenCV中，人脸检测器（如Haar级联分类器）
+        # 通常在灰度图像上运行得更好。因此，我们需要将输入图像转换为灰度图像。
         eyes = self.model["eye_detector"].detectMultiScale(detected_face_gray, 1.1, 10)
 
         # ----------------------------------------------------------------
