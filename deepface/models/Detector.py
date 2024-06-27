@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 # Notice that all facial detector models must be inherited from this class
+# 注意所有面部检测器模型都必须继承自这个类
 
 
 # pylint: disable=unnecessary-pass, too-few-public-methods
