@@ -28,7 +28,7 @@ def build_model(detector_backend: str) -> Any:
     Returns:
         built detector (Any)
     """
-    global face_detector_obj  # singleton design pattern
+    global face_detector_obj  # singleton design pattern 单例设计模式
 
     backends = {
         "opencv": OpenCv.OpenCvClient,
@@ -87,7 +87,9 @@ def detect_faces(
     """
     height, width, _ = img.shape
 
-    face_detector: Detector = build_model(detector_backend)
+    face_detector: Detector = build_model(detector_backend)   # 语法：变量注解variable annotation。
+    # 变量face_detector的类型是Detector，Detector是一个抽象类。face_detector的默认值是build_model(detector_backend)的返回值。
+    # 即DetectorWrapper.build_model()函数的返回值是Detector类型的对象。
 
     # validate expand percentage score
     if expand_percentage < 0:
