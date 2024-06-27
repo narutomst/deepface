@@ -119,7 +119,7 @@ while True:
         #     img=img, detector_backend=detector_backend, anti_spoofing=anti_spoofing
         # )
         try:
-            face_objs = DeepFace.extract_faces(
+            face_objs = detection.extract_faces(
                 img_path=img,
                 detector_backend=detector_backend,
                 # you may consider to extract with larger expanding value
@@ -142,6 +142,7 @@ while True:
         except:  # to avoid exception if no face detected
             print("no face detected, continue")
             continue
+        print("face detected!")
         # we will pass img to analyze modules (identity, demography) and add some illustrations
         # that is why, we will not be able to extract detected face from img clearly
         # 我们将把 img 传递给分析模块（身份、人口），并添加一些插图。这就是为什么我们无法从 img 中清晰提取检测到的人脸的原因。
