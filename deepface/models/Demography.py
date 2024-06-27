@@ -10,6 +10,7 @@ else:
     from tensorflow.keras.models import Model
 
 # Notice that all facial attribute analysis models must be inherited from this class
+# 注意所有面部属性分析模型都必须继承自这个类
 
 
 # pylint: disable=too-few-public-methods
