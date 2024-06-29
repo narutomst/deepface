@@ -305,7 +305,7 @@ def highlight_facial_areas(
                 color = (0, 255, 0)  # 绿色
             else:
                 color = (0, 0, 255)  # 红色
-        cv2.rectangle(img, (x, y), (x + w, y + h), color, 1)
+        cv2.rectangle(img, (x, y), (x + w, y + h), color, 2)
     return img
 
 
