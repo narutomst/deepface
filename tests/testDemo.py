@@ -1,4 +1,5 @@
-from PIL import ImageGrab
+from PIL import ImageGrab,Image,ImageDraw,ImageFont
+from typing import Union
 import time
 import cv2
 from deepface import DeepFace
@@ -24,6 +25,29 @@ logger = log.get_singletonish_logger()
 # test_enforce_detection.test_disabled_enforce_detection_for_non_facial_input_on_represent()
 # test_enforce_detection.test_disabled_enforce_detection_for_non_facial_input_on_verify()
 
+
+def get_video_info(video_cap):
+    width = int(video_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(video_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    numFrames = int(video_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps = int(video_cap.get(cv2.CAP_PROP_FPS))
+    return width, height, numFrames, fps
+
+
+def cv2AddChineseText(img, text, position, textColor=(0, 255, 0), textSize=30):
+    if (isinstance(img, np.ndarray)):  # 判断是否OpenCV图片类型
+        img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    # 创建一个可以在给定图像上绘图的对象
+    draw = ImageDraw.Draw(img)
+    # 字体的格式
+    fontStyle = ImageFont.truetype(
+        "simsun.ttc", textSize, encoding="utf-8")
+    # 绘制文本
+    draw.text(position, text, textColor, font=fontStyle)
+    # 转换回OpenCV格式
+    return cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR)
+
+
 # 使用DeepFace.stream()执行实时分析功能，但是去掉Age、Gender和人脸对比分析，只要输出Emotion
 # 这样就能降低运算量。
 
@@ -40,7 +64,7 @@ enable_face_analysis_Gender = False
 enable_face_analysis_Race = False
 
 enable_face_recognition = False
-source = 0
+source: Union[int, str] = 0
 time_threshold = 5
 frame_threshold = 5
 anti_spoofing = False
@@ -100,6 +124,7 @@ if enable_face_recognition:
 
 freezed_img = None
 freeze = False
+emotion: str = ""
 num_frames_with_faces = 0
 tic = time.time()
 
@@ -111,16 +136,75 @@ num_cols = 3
 area_height = screen_height / num_rows
 area_width = screen_width / num_cols
 
+isDebug = False
 start = True
+
+# source = "rtsp://admin:IAMLSA@192.168.1.45:554/Streaming/Channels/101"  # 主通道
+# source = "rtsp://admin:IAMLSA@192.168.1.45:554/Streaming/Channels/102"  # 子通道
+# 是否只显示一个窗口
+only_one_window = True
+main_window_width: int = 720
+main_window_height: int = 540
+
+if only_one_window:
+    print("单窗口")
+    main_window_x: int = 100
+    main_window_y: int = 100
+    if isinstance(source, int):
+        print("系统自动搜索可用摄像头，使用默认窗口尺寸及分辨率进行显示")
+        main_window_width: int = 640
+        main_window_height: int = 480
+    elif source.startswith("rtsp"):
+        print("识别为rtsp流")
+        if len(source) > 23 and source.endswith("/101"):
+            print("识别为海康或萤石主通道rtsp，设置窗口大小为1920*1080")
+            main_window_width: int = 1920   # 萤石摄像头直接取流，主通道分辨率为1920*1080，子通道768*432
+            main_window_height: int = 1080
+        elif len(source) > 23 and source.endswith("/102"):
+            print("识别为海康或萤石子通道rtsp，设置窗口大小为768*432")
+            main_window_width: int = 768   # 萤石摄像头直接取流，主通道分辨率为1920*1080，子通道768*432
+            main_window_height: int = 432
+        else:
+            print("识别为其他rtsp流，设置窗口大小为1920*1080")
+            main_window_width: int = 1920
+            main_window_height: int = 1080
+else:
+    # cv2.moveWindow(window_name, int(area_width * 2), int(area_height))
+    main_window_x: int = int(area_width*2)
+    main_window_y: int = int(area_height)
+    main_window_width: int = 720
+    main_window_height: int = 540
+
+# 创建VideoCapture对象
 cap = cv2.VideoCapture(source)  # webcam
-while start:
+# 检查是否成功打开流
+if cap.isOpened():
+    print("RTSP stream opened successfully")
+else:
+    print("Error opening RTSP stream")
+    exit()
+
+frame_i: int = 0
+# fps = cap.get(cv2.CAP_PROP_FPS)   # 返回值为0.0
+fps = cap.get(5)    # 获取帧率
+# while start:
+for i in range(10000):
     print("从摄像头读取帧...")
     has_frame, img = cap.read()
     if not has_frame:
+        print("无法从摄像头读取帧，退出程序")
         break
-    window_name: str = "Fig1 Frame read"
-    cv2.imshow(window_name, img)
-    cv2.moveWindow(window_name, 0, 0)
+
+    img_w = int(img.shape[1] / 2)
+    img_h = int(img.shape[0] / 2)
+
+    if isDebug:
+        window_name: str = "Fig1 Frame read"
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+        cv2.imshow(window_name, img)
+        cv2.resizeWindow(window_name, 720, 540)  # 默认 640,480
+        cv2.moveWindow(window_name, 0, 0)
+
     # cv2.moveWindow()函数的参数是窗口的新位置，这个位置是相对于屏幕左上角的坐标。所以，当你的参数是(0, 0)
     # 时，窗口的左上角就会被移动到屏幕的左上角。
 
@@ -149,13 +233,13 @@ while start:
                     face_obj["facial_area"]["w"],
                     face_obj["facial_area"]["h"],
                     face_obj.get("is_real", True),
-                    face_obj.get("antispoof_score", 0),
+                    face_obj.get("antispoof_score", 0),   #
                 )
                 for face_obj in face_objs
                 if face_obj["facial_area"]["w"] > threshold
             ]
             faces_coordinates = faces
-            print("人脸坐标获取成功")
+            print("人脸坐标list获取成功")
         except:  # to avoid exception if no face detected
             print("no face detected, continue")
             #continue
@@ -164,6 +248,7 @@ while start:
         # that is why, we will not be able to extract detected face from img clearly
         # 我们将把 img 传递给分析模块（身份、人口），并添加一些插图。这就是为什么我们无法从 img 中清晰提取检测到的人脸的原因。
         detected_faces = extract_facial_areas(img=img, faces_coordinates=faces_coordinates)
+        print("人脸图片list提取成功")
         # deepface.modules.streaming.extract_facial_areas()具体实现代码如下：
         # detected_faces = []
         # for x, y, w, h, is_real, antispoof_score in faces_coordinates:
@@ -171,10 +256,14 @@ while start:
         #     detected_faces.append(detected_face)
 
         img = highlight_facial_areas(img=img, faces_coordinates=faces_coordinates)
+        print("人脸打框标记成功")
         # cv2.imshow("Fig2 highlight_facial_areas() output image", img)
-        window_name: str = "Fig2 highlight_facial_areas() output image"
-        cv2.imshow(window_name, img)
-        cv2.moveWindow(window_name, int(area_width), 0)
+        if isDebug:
+            window_name: str = "Fig2 highlight_facial_areas() output image"
+            cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+            cv2.resizeWindow(window_name, 720, 540)
+            cv2.imshow(window_name, img)
+            cv2.moveWindow(window_name, int(area_width), 0)
 
         # 这里我们使用了一个名为countdown_to_freeze()的函数来计算帧数，并判断是否达到阈值。
         img = countdown_to_freeze(
@@ -183,10 +272,13 @@ while start:
             frame_threshold=frame_threshold,
             num_frames_with_faces=num_frames_with_faces,
         )
-        # cv2.imshow("Fig3 countdown_to_freeze() output image", img)
-        window_name: str = "Fig3 countdown_to_freeze() output image"
-        cv2.imshow(window_name, img)
-        cv2.moveWindow(window_name, int(area_width*2), 0)
+        if isDebug:
+            # cv2.imshow("Fig3 countdown_to_freeze() output image", img)
+            window_name: str = "Fig3 countdown_to_freeze() output image"
+            cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+            cv2.resizeWindow(window_name, 720, 540)
+            cv2.imshow(window_name, img)
+            cv2.moveWindow(window_name, int(area_width*2), 0)
 
         num_frames_with_faces = num_frames_with_faces + 1 if len(faces_coordinates) else 0
         print("num_frames_with_faces:", num_frames_with_faces)
@@ -198,10 +290,13 @@ while start:
             img = highlight_facial_areas(
                 img=raw_img, faces_coordinates=faces_coordinates, anti_spoofing=anti_spoofing
             )
-            # cv2.imshow("Fig4 highlight_facial_areas()output image", img)
-            window_name: str = "Fig4 highlight_facial_areas()output image"
-            cv2.imshow(window_name, img)
-            cv2.moveWindow(window_name, 0, int(area_height))
+            if isDebug:
+                # cv2.imshow("Fig4 highlight_facial_areas()output image", img)
+                window_name: str = "Fig4 highlight_facial_areas()output image"
+                cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+                cv2.resizeWindow(window_name, 720, 540)
+                cv2.imshow(window_name, img)
+                cv2.moveWindow(window_name, 0, int(area_height))
             # age, gender and emotion analysis
             # img = perform_demography_analysis(
             #     enable_face_analysis=enable_face_analysis,
@@ -230,12 +325,19 @@ while start:
 
                 # safe to access 1st index because detector backend is skip
                 demography = demographies[0]
+                emotion = demography['dominant_emotion']
+                rate = demography['emotion'][emotion]
+                region = demography['region']
 
                 img = overlay_emotion(img=raw_img, emotion_probas=demography["emotion"], x=x, y=y, w=w, h=h)
-                # cv2.imshow("Fig5 overlay_emotion()output image", img)
-                window_name: str = "Fig5 overlay_emotion()output image"
-                cv2.imshow(window_name, img)
-                cv2.moveWindow(window_name, int(area_width), int(area_height))
+
+                if isDebug:
+                    # cv2.imshow("Fig5 overlay_emotion()output image", img)
+                    window_name: str = "Fig5 overlay_emotion()output image"
+                    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+                    cv2.resizeWindow(window_name, 720, 540)
+                    cv2.imshow(window_name, img)
+                    cv2.moveWindow(window_name, int(area_width), int(area_height))
 
                 if enable_face_analysis_Age and enable_face_recognition:
                     img = overlay_age_gender(
@@ -276,13 +378,21 @@ while start:
 
     freezed_img = countdown_to_release(img=freezed_img, tic=tic, time_threshold=time_threshold)
     window_name = "img" if freezed_img is None else "freezed_img"
-    cv2.imshow(window_name, img if freezed_img is None else freezed_img)
-    cv2.moveWindow(window_name, int(area_width*2), int(area_height))
-
+    out_img = img if freezed_img is None else freezed_img
+    # out_img = cv2AddChineseText(out_img, f'fps:{fps} res:{img_w}×{img_h}', (420, 28), textColor=(0, 255, 0), textSize=20)
+    # out_img = cv2.putText(out_img, f'fps:{fps} res:{img_w}×{img_h}', (420, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 1)
+    # out_img = cv2AddChineseText(out_img, f'frame:{i}', (290, 28), textColor=(0, 255, 0), textSize=20)
+    out_img = cv2.putText(out_img, f'frame:{i}', (490, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 1)
+    out_img = cv2.putText(out_img, f'Emotion:{emotion}', (250, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 1)
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(window_name, main_window_width, main_window_height)
+    cv2.imshow(window_name, out_img)
+    cv2.moveWindow(window_name, main_window_x, main_window_y)
+    #
     if cv2.waitKey(1) & 0xFF == ord("q"):  # press q to quit
         break
     # 测试开关
-    start = False
+    # start = False
 
 print("循环运行完毕")
 print("按q键退出，或者倒计时结束自动退出")
@@ -310,3 +420,5 @@ while True:
 # # kill open cv things
 # cap.release()
 # cv2.destroyAllWindows()
+
+
