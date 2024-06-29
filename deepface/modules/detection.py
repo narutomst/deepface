@@ -77,9 +77,9 @@ def extract_faces(
 
     if img is None:
         raise ValueError(f"Exception while loading {img_name}")
-
+    # 创建一个表示整个图像的面部区域对象，以便在后续的人脸识别和分析过程中使用。
     base_region = FacialAreaRegion(x=0, y=0, w=img.shape[1], h=img.shape[0], confidence=0)
-
+    # 当输入图像为面部区域截图时，无需再从图中查找人脸，此时detector_backend可以设置为skip
     if detector_backend == "skip":
         face_objs = [DetectedFace(img=img, facial_area=base_region, confidence=0)]
     else:
@@ -116,9 +116,10 @@ def extract_faces(
 
         if grayscale is True:
             current_img = cv2.cvtColor(current_img, cv2.COLOR_BGR2GRAY)
-
+        print("current_img.range():${current_img.min()}, ${current_img.max()}")
         current_img = current_img / 255  # normalize input in [0, 1]
-
+        print("After normalization, current_img.range():${current_img.min()}, ${current_img.max()}")
+        # print("current_img.range():${current_img.min()}, ${current_img.max()}")
         x = int(current_region.x)
         y = int(current_region.y)
         w = int(current_region.w)
