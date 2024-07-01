@@ -138,9 +138,11 @@ area_width = screen_width / num_cols
 
 isDebug = False
 start = True
-
-# source = "rtsp://admin:IAMLSA@192.168.1.45:554/Streaming/Channels/101"  # 主通道
-# source = "rtsp://admin:IAMLSA@192.168.1.45:554/Streaming/Channels/102"  # 子通道
+# 萤石网络摄像头
+# source = "rtsp://admin:IAMLSA@192.168.1.2:554/Streaming/Channels/101"  # 主通道
+# source = "rtsp://admin:IAMLSA@192.168.1.2:554/Streaming/Channels/102"  # 子通道
+# 海康POE摄像头
+source = "rtsp://admin:FE0523137@192.168.1.5:554/Streaming/Channels/101"  # 主通道
 # 是否只显示一个窗口
 only_one_window = True
 main_window_width: int = 720
