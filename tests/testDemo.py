@@ -377,6 +377,7 @@ for i in range(10000):
         logger.info("freeze released")
 
     freezed_img = countdown_to_release(img=freezed_img, tic=tic, time_threshold=time_threshold)
+    have_freezed_img = True if freezed_img is not None else False
     window_name = "img" if freezed_img is None else "freezed_img"
     out_img = img if freezed_img is None else freezed_img
     # out_img = cv2AddChineseText(out_img, f'fps:{fps} res:{img_w}×{img_h}', (420, 28), textColor=(0, 255, 0), textSize=20)
@@ -387,7 +388,8 @@ for i in range(10000):
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     cv2.resizeWindow(window_name, main_window_width, main_window_height)
     cv2.imshow(window_name, out_img)
-    cv2.moveWindow(window_name, main_window_x, main_window_y)
+    if have_freezed_img:
+        cv2.moveWindow(window_name, main_window_x+main_window_width+10, main_window_y)
     #
     if cv2.waitKey(1) & 0xFF == ord("q"):  # press q to quit
         break
