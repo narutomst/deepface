@@ -138,7 +138,7 @@ area_width = screen_width / num_cols
 
 isDebug = False
 start = True
-# 萤石网络摄像头（视频流编码格式H264）
+# 萤石网络摄像头（视频流编码格式H264，分辨率1920×1080，帧率12fps）
 # source = "rtsp://admin:IAMLSA@192.168.1.2:554/Streaming/Channels/101"  # 主通道
 # source = "rtsp://admin:IAMLSA@192.168.1.2:554/Streaming/Channels/102"  # 子通道
 # 主通道取流，几十帧之后就失败了，cap.read()返回值为False
@@ -147,7 +147,15 @@ start = True
 
 # 海康POE摄像头（摄像头接POE交换机，POE交换机接电脑主机，视频流默认编码格式H265）
 # source = "rtsp://admin:FE0523137@192.168.1.5:554/Streaming/Channels/101"  # 主通道
-source = "rtsp://admin:FE0523137@192.168.1.5:554/Streaming/Channels/102"  # 子通道
+# source = "rtsp://admin:FE0523137@192.168.1.5:554/Streaming/Channels/102"  # 子通道
+# 主通道取流，几帧之后就失败了，cap.read()返回值为False
+# 子通道取流，几帧之后就失败了，cap.read()返回值为False
+# 在OBS设置为虚拟摄像头，两种通道都运行正常
+# 将视频流编码格式改为H264，取流失败的问题依然如故！
+
+# 海康POE摄像头（摄像头接POE交换机，POE交换机接电脑主机，视频流默认编码格式H265）
+# source = "rtsp://admin:FE0523264@192.168.1.6:554/Streaming/Channels/101"  # 主通道
+# source = "rtsp://admin:FE0523264@192.168.1.6:554/Streaming/Channels/102"  # 子通道
 # 主通道取流，几帧之后就失败了，cap.read()返回值为False
 # 子通道取流，几帧之后就失败了，cap.read()返回值为False
 # 在OBS设置为虚拟摄像头，两种通道都运行正常
@@ -204,9 +212,11 @@ for i in range(10000):
     print("从摄像头读取帧...")
     has_frame, img = cap.read()
     if not has_frame:
-        print("无法从摄像头读取帧，退出程序")
-        break
-
+        # print("无法从摄像头读取帧，退出程序")
+        # break
+        print("读取失败，重新连接摄像头...")
+        cap = cv2.VideoCapture(source)
+        continue
     img_w = int(img.shape[1] / 2)
     img_h = int(img.shape[0] / 2)
 
