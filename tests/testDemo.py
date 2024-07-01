@@ -138,11 +138,21 @@ area_width = screen_width / num_cols
 
 isDebug = False
 start = True
-# 萤石网络摄像头
+# 萤石网络摄像头（视频流编码格式H264）
 # source = "rtsp://admin:IAMLSA@192.168.1.2:554/Streaming/Channels/101"  # 主通道
 # source = "rtsp://admin:IAMLSA@192.168.1.2:554/Streaming/Channels/102"  # 子通道
-# 海康POE摄像头
-source = "rtsp://admin:FE0523137@192.168.1.5:554/Streaming/Channels/101"  # 主通道
+# 主通道取流，几十帧之后就失败了，cap.read()返回值为False
+# 子通道取流，运行正常
+# 在OBS设置为虚拟摄像头，两种通道都运行正常
+
+# 海康POE摄像头（摄像头接POE交换机，POE交换机接电脑主机，视频流默认编码格式H265）
+# source = "rtsp://admin:FE0523137@192.168.1.5:554/Streaming/Channels/101"  # 主通道
+source = "rtsp://admin:FE0523137@192.168.1.5:554/Streaming/Channels/102"  # 子通道
+# 主通道取流，几帧之后就失败了，cap.read()返回值为False
+# 子通道取流，几帧之后就失败了，cap.read()返回值为False
+# 在OBS设置为虚拟摄像头，两种通道都运行正常
+# 将视频流编码格式改为H264，取流失败的问题依然如故！
+
 # 是否只显示一个窗口
 only_one_window = True
 main_window_width: int = 720
@@ -160,12 +170,12 @@ if only_one_window:
         print("识别为rtsp流")
         if len(source) > 23 and source.endswith("/101"):
             print("识别为海康或萤石主通道rtsp，设置窗口大小为1920*1080")
-            main_window_width: int = 1920   # 萤石摄像头直接取流，主通道分辨率为1920*1080，子通道768*432
-            main_window_height: int = 1080
+            # main_window_width: int = 1920   # 萤石摄像头直接取流，主通道分辨率为1920*1080，子通道分辨率768*432
+            # main_window_height: int = 1080  # 海康POE摄像头取流，主通道分辨率为1920*1080，子通道分辨率640×360
         elif len(source) > 23 and source.endswith("/102"):
             print("识别为海康或萤石子通道rtsp，设置窗口大小为768*432")
-            main_window_width: int = 768   # 萤石摄像头直接取流，主通道分辨率为1920*1080，子通道768*432
-            main_window_height: int = 432
+            # main_window_width: int = 768   # 萤石摄像头直接取流，主通道分辨率为1920*1080，子通道分辨率768*432
+            # main_window_height: int = 432  # 海康POE摄像头取流，主通道分辨率为1920*1080，子通道分辨率640×360
         else:
             print("识别为其他rtsp流，设置窗口大小为1920*1080")
             main_window_width: int = 1920
